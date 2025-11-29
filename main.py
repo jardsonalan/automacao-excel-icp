@@ -15,11 +15,19 @@ def normalize_str(s):
     s = re.sub(r'\s+', ' ', s).strip().lower()
     return s
 
-# ---- extrair número final ----
-def extrair_numero_final(id_str):
+# ---- extrair número central ----
+def extrair_id_central(id_str):
+    """
+    Extrai o número entre E* e SA
+    Ex: E7_42201_SA  -> 42201
+    """
     id_str = str(id_str).strip()
-    match = re.search(r'(\d+)$', id_str)
-    return int(match.group(1)) if match else None
+    
+    # regex para pegar o número entre "_" e "_SA"
+    match = re.search(r'_(\d+)_SA', id_str, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    return None
 
 # ---- detectar coluna com heurísticas + fallback para escolher manualmente ----
 def detectar_coluna_id(df):
@@ -64,13 +72,13 @@ def detectar_coluna_id(df):
 def separar_por_tabela(df):
     coluna_id = detectar_coluna_id(df)
 
-    df['NUM_FINAL'] = df[coluna_id].apply(extrair_numero_final)
+    df['ID_EXTRAIDO'] = df[coluna_id].apply(extrair_id_central)
 
-    df_validos = df.dropna(subset=['NUM_FINAL'])
+    df_validos = df.dropna(subset=['ID_EXTRAIDO'])
 
     tabelas = {
-        numero: df_validos[df_validos['NUM_FINAL'] == numero].copy()
-        for numero in sorted(df_validos['NUM_FINAL'].unique())
+        numero: df_validos[df_validos['ID_EXTRAIDO'] == numero].copy()
+        for numero in sorted(df_validos['ID_EXTRAIDO'].unique())
     }
 
     return tabelas
