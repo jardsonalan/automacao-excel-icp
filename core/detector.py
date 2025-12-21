@@ -1,23 +1,16 @@
 import re
 import pandas as pd
 from tkinter import messagebox, simpledialog
-from .utils import normalize_str
 
 def detectar_coluna_id(df):
-  chaves = ['id']
-
-  norm_cols = {col: normalize_str(col) for col in df.columns}
-
-  for col, ncol in norm_cols.items():
-    if any(chave in ncol for chave in chaves):
+  # Encontra colunas cujo nome é exatamente "ID"
+  for col in df.columns:
+    if str(col).strip().upper() == "ID":
       return col
 
-  for col, ncol in norm_cols.items():
-    if re.search(r'\bid\b', ncol):
-      return col
-
+  # Se não encontrou, mostra as colunas e pede manualmente
   cols_text = "\n".join(f"- {c}" for c in df.columns)
-  messagebox.showinfo("Escolha de Coluna", "Colunas:\n\n" + cols_text)
+  messagebox.showinfo("Escolha de Coluna", "Colunas encontradas:\n\n" + cols_text)
   escolha = simpledialog.askstring("Coluna de ID", "Nome exato da coluna de ID:")
 
   if escolha not in df.columns:
@@ -25,12 +18,13 @@ def detectar_coluna_id(df):
 
   return escolha
 
-
 def detectar_header_automatico(arquivo):
   df_raw = pd.read_excel(arquivo, header=None)
 
   for index, row in df_raw.iterrows():
-    if "id" in " ".join(str(x).lower() for x in row):
-      return index
+    # verifica se existe uma célula exatamente equal ID (desconsiderando espaços e acentos)
+    for cell in row:
+      if str(cell).strip().upper() == "ID":
+        return index
 
-  raise Exception("Nenhuma linha contendo 'ID' foi encontrada.")
+  raise Exception("Nenhuma linha contendo a coluna 'ID' foi encontrada.")
